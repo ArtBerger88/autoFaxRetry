@@ -4,7 +4,7 @@ from fax_api import send_fax
 from utils.logger import log
 
 def send_with_retry(pdf_path, fax_number, max_attempts=10, delay_seconds=30):
-    log(f"Starting fax retry engine for {pdf_path} → {fax_number}")
+    log(f"Starting fax retry engine for {pdf_path} -> {fax_number}")
     log(f"Max attempts: {max_attempts}, Delay: {delay_seconds}s")
 
     for attempt in range(1, max_attempts + 1):

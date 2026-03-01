@@ -1,34 +1,65 @@
-# Auto-fax-retry — Simplified Architecture
+# Architecture Overview
 
-Goal: reliably send faxes, persist status/artifacts, and retry transient failures with minimal components.
+Auto‑Fax‑Retry is a modular Python service designed to send a PDF fax and automatically retry failed attempts. The system is composed of four core modules.
 
-Components
-- API (Webhooks): accept send requests and provider callbacks; validate and create fax record.
-- Storage: blob store for documents/receipts; SQL for fax metadata and status.
-- Queue: simple message queue (RabbitMQ / Redis Streams / SQS) for send jobs and delayed retries.
-- Worker: stateless sender that consumes jobs, calls provider, updates DB, stores receipts.
-- UI (optional): simple dashboard for viewing/cancelling jobs.
-- Monitoring: logs + basic metrics (success, retries, failures).
+## 1. config.py — Configuration Layer
+Loads and validates all runtime settings:
+- Fax number
+- PDF file path
+- Retry limit
+- Delay strategy
+- API credentials
+- Logging options
 
-Core principles
-- Idempotency: use a unique fax_id for all operations.
-- Single source of truth: DB stores canonical status; queue only drives work.
-- Simple retry: worker increments retry_count and re-enqueues with delay; use exponential backoff and a max attempts limit.
-- Dead-letter: move permanently failed items to DLQ for manual review.
+Configuration may come from environment variables, a .env file, or defaults during early development.
 
-Typical flow
-1. Client → API: create fax record, upload document to Storage, enqueue send job.
-2. Worker consumes job → call Fax Provider.
-3. On success: update DB status to SENT, store receipt.
-4. On transient failure: increment retry_count; if < max, re-enqueue with delay; else move to DLQ and mark FAILED.
-5. Provider callback → API reconciles status and cancels pending retries if needed.
+## 2. fax_api.py — Fax Provider Abstraction
+A wrapper around the fax provider’s API.
 
-Retry policy (example)
-- Backoff: delay = base_delay * 2^(retry_count-1) (e.g., base_delay = 30s)
-- Max attempts: 15
-- Immediate requeue on transient network/provider errors; final failures go to DLQ.
+Responsibilities:
+- Send a fax request
+- Return a normalized success/failure response
+- Handle provider-specific errors
+- Allow easy swapping of providers
 
-Minimal reliability tips
-- Persist DB changes before enqueuing (or use outbox pattern).
-- Authenticate provider callbacks and validate fax_id.
-- Expose retry_count and next_attempt in DB for visibility.
+A mock provider is used during early development.
+
+## 3. retry_engine.py — Retry Logic
+Controls retry behavior when a fax fails.
+
+Responsibilities:
+- Attempt fax send
+- Log each attempt
+- Apply delay strategy between attempts
+- Stop after success or max retries
+- Return final status to the caller
+
+The retry engine is provider‑agnostic.
+
+## 4. main.py — Entry Point
+A simple script demonstrating how to run the service.
+
+Responsibilities:
+- Load configuration
+- Call the retry engine
+- Output final result
+- Serve as a reference for future CLI or automation scripts
+
+## Data Flow
+
+main.py  
+→ config.py (loads settings)  
+→ retry_engine.py (manages attempts)  
+→ fax_api.py (sends fax via provider)  
+→ logs/ (records attempt history)
+
+## Logging
+The system logs:
+- Timestamp
+- Attempt number
+- Provider response
+- Success/failure
+- Final outcome
+
+Logs are stored in a dedicated directory and may later support rotation or JSON formatting.
+

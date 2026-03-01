@@ -1,36 +1,48 @@
 # Auto Fax Retry Service - Roadmap
 
-## Phase 1: Core Functionality
-- [ ] Implement basic fax sending mechanism
-- [ ] Create retry logic with configurable intervals
-- [ ] Set up error handling and logging
-- [ ] Develop queue system for pending faxes
-- [ ] Add database schema for fax tracking
+## Phase 1: Project Foundation
+- [✅] Create initial repository structure
+- [ ] Add README, LICENSE, architecture, and roadmap documents
+- [ ] Set up src/ and docs/ directories
+- [ ] Establish commit conventions and branching workflow
 
-## Phase 2: Enhanced Features
-- [ ] Implement exponential backoff for retries
-- [ ] Add maximum retry limits per fax
-- [ ] Create status tracking and reporting
-- [ ] Build notification system (email/SMS alerts)
-- [ ] Add fax history and analytics
 
-## Phase 3: Administration & Monitoring
-- [ ] Develop admin dashboard
-- [ ] Create API endpoints for fax management
-- [ ] Implement real-time monitoring and alerts
-- [ ] Add audit logging
-- [ ] Build user authentication and roles
+## Phase 2: Core Fax Engine (Mock Implementation)
+- [ ] Implement fax_api.py with a mock fax provider
+- [ ] Define a consistent response format for success/failure
+- [ ] Add basic logging for each attempt
+- [ ] Create main.py to demonstrate a single fax send
 
-## Phase 4: Advanced Features
-- [ ] Support for multiple fax providers
-- [ ] Scheduling and batch processing
-- [ ] Queue prioritization
-- [ ] Performance optimization
-- [ ] Integration with third-party services
+## Phase 3: Retry Engine
+- [ ] Implement retry logic in retry_engine.py
+- [ ] Add configurable retry limits and delays
+- [ ] Integrate logging for each retry attempt
+- [ ] Add success/failure notifications (console or file‑based)
 
-## Phase 5: Production Ready
-- [ ] Comprehensive testing (unit, integration, E2E)
-- [ ] Documentation and API specifications
-- [ ] Security hardening
-- [ ] Deployment automation
-- [ ] Performance benchmarking and optimization
+## Phase 4: Configuration System
+- [ ] Implement config.py for:
+    [ ]API keys
+    [ ]Fax number
+    [ ]PDF path
+    [ ]Retry limits
+    [ ]Delay strategy
+- [ ] Add validation for missing or invalid config values
+
+## Phase 5: Real Fax Provider Integration
+- [ ] Replace mock API with a real fax provider
+- [ ] Add error handling for provider‑specific failure modes
+- [ ] Add environment variable support for sensitive values
+
+## Phase 6: Reliability & automation
+- [ ] Improve logging format (timestamps, attempt numbers, status codes)
+- [ ] Add rotating log files
+- [ ] Add CLI arguments for overrides
+- [ ] Prepare for scheduled/automated execution
+
+## Phase 7: Release Prep
+- [ ] Finalize documentation
+- [ ] Add usage examples
+- [ ] Tag v1.0.0
+
+## Phase 8: Release
+- [ ] Release

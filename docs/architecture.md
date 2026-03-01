@@ -25,7 +25,7 @@ Typical flow
 
 Retry policy (example)
 - Backoff: delay = base_delay * 2^(retry_count-1) (e.g., base_delay = 30s)
-- Max attempts: 5
+- Max attempts: 15
 - Immediate requeue on transient network/provider errors; final failures go to DLQ.
 
 Minimal reliability tips

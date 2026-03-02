@@ -1,6 +1,6 @@
 import time 
 from src.send_fax_once import send_fax_once 
-from src.logger import log_attempt 
+from src.utils.logger import log_attempt 
 
 def run_retry_loop(api, config): 
     """ 

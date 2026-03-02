@@ -1,0 +1,9 @@
+{ 
+    "phaxio_api_key": "YOUR_API_KEY_HERE", 
+    "phaxio_api_secret": "YOUR_API_SECRET_HERE", 
+    "fax_number": "15551234567", 
+    "pdf_path": "docs/myfax.pdf", 
+    "max_attempts": 20, 
+    "delay_seconds": 300, 
+    "log_file": "logs/fax_attempts.log" 
+}

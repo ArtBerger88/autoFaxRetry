@@ -7,10 +7,10 @@
 - [✅] Establish commit conventions and branching workflow
 
 ## Phase 2: Core Fax Engine (Mock Implementation)
-- [ ] Implement fax_api.py with a mock fax provider
-- [ ] Define a consistent response format for success/failure
-- [ ] Add basic logging for each attempt
-- [ ] Create main.py to demonstrate a single fax send
+- [✅] Implement fax_api.py with a mock fax provider
+- [✅] Define a consistent response format for success/failure
+- [✅] Add basic logging for each attempt
+- [✅] Create main.py to demonstrate a single fax send
 
 ## Phase 3: Retry Engine
 - [ ] Implement retry logic in retry_engine.py

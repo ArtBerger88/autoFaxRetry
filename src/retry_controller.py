@@ -27,7 +27,7 @@ def run_retry_loop(api, config):
             msg = f"Fax delivered on attempt {attempt}." 
             print(msg) 
             log(msg, log_file) 
-            return 
+            return True
         
         msg = f"Attempt {attempt} failed. Retrying in {delay} seconds..." 
         print(msg) 
@@ -37,3 +37,4 @@ def run_retry_loop(api, config):
     msg = "Max attempts reached. Fax not delivered." 
     print(msg) 
     log(msg, log_file)
+    return False

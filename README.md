@@ -5,14 +5,16 @@ A lightweight Python service that sends a PDF to a fax number and automatically 
 -Automatic retry on failed fax attempts, up to a configurable limit
 -No Per day cap on attempts
 -Direct fax API integration (no email confirmation, no two‑step workflow)
--Logs attempts
+-Logs attempts (including detailed messages to `logs/fax_attempts.log`)
 -Notification upon successful send
 
 ## Project structure
+config/
+
 src/
-  config.py        # Configuration helpers (paths, retry limits, API keys)
   fax_api.py       # Wrapper around the chosen fax provider
-  retry_engine.py  # Core retry logic
+  retry_controller.py # Application retry loop; logs via utils/logger
+  utils/logger.py  # Simple timestamped logging helpers
   main.py          # Example invocation / entry point
 
 docs/

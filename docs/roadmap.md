@@ -13,7 +13,7 @@
 - [✅] Create main.py to demonstrate a single fax send
 
 ## Phase 3: Retry Engine
-- [ ] Implement retry logic in retry_engine.py
+- [] Implement retry logic in retry_engine.py
 - [ ] Add configurable retry limits and delays
 - [ ] Integrate logging for each retry attempt
 - [ ] Add success/failure notifications (console or file‑based)

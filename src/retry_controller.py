@@ -1,6 +1,6 @@
 import time 
 from src.send_fax_once import send_fax_once 
-from src.utils.logger import log_attempt 
+from src.utils.logger import log, log_attempt 
 
 def run_retry_loop(api, config): 
     """ 
@@ -15,16 +15,25 @@ def run_retry_loop(api, config):
     delay = config["delay_seconds"] 
     log_file = config["log_file"] 
     
+    # record starting point
+    log(f"Starting retry loop for {pdf_path} -> {fax_number}", log_file)
+    
     for attempt in range(1, max_attempts + 1): 
         result = send_fax_once(api, fax_number, pdf_path) 
         
         log_attempt(log_file, attempt, result) 
         
         if result["success"]: 
-            print(f"Fax delivered on attempt {attempt}.") 
+            msg = f"Fax delivered on attempt {attempt}." 
+            print(msg) 
+            log(msg, log_file) 
             return 
         
-        print(f"Attempt {attempt} failed. Retrying in {delay} seconds...") 
+        msg = f"Attempt {attempt} failed. Retrying in {delay} seconds..." 
+        print(msg) 
+        log(msg, log_file) 
         time.sleep(delay) 
         
-    print("Max attempts reached. Fax not delivered.")
+    msg = "Max attempts reached. Fax not delivered." 
+    print(msg) 
+    log(msg, log_file)

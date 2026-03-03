@@ -38,10 +38,15 @@
 - [ ] Add CLI arguments for overrides
 - [ ] Prepare for scheduled/automated execution
 
-## Phase 7: Release Prep
+## Phase 7: UI
+- [ ] Create UI Dashboard
+- [ ] Send Fax Form
+- [ ] History & Details
+- [ ] Settings and Notifications
+
+## Phase 8: Release Prep
 - [ ] Finalize documentation
-- [ ] Add usage examples
 - [ ] Tag v1.0.0
 
-## Phase 8: Release
+## Phase 9: Release
 - [ ] Release

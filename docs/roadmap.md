@@ -13,19 +13,19 @@
 - [✅] Create main.py to demonstrate a single fax send
 
 ## Phase 3: Retry Engine
-- [] Implement retry logic in retry_engine.py
-- [ ] Add configurable retry limits and delays
-- [ ] Integrate logging for each retry attempt
-- [ ] Add success/failure notifications (console or file‑based)
+- [✅] Implement retry logic in retry_controller.py
+- [✅] Add configurable retry limits and delays
+- [✅] Integrate logging for each retry attempt
+- [✅] Add success/failure notifications (console or file‑based)
 
 ## Phase 4: Configuration System
-- [ ] Implement config.py for:
-    [ ]API keys
-    [ ]Fax number
-    [ ]PDF path
-    [ ]Retry limits
-    [ ]Delay strategy
-- [ ] Add validation for missing or invalid config values
+- [✅] Implement config for:
+    [✅]API keys
+    [✅]Fax number
+    [✅]PDF path
+    [✅]Retry limits
+    [✅]Delay strategy
+- [✅] Add validation for missing or invalid config values
 
 ## Phase 5: Real Fax Provider Integration
 - [ ] Replace mock API with a real fax provider

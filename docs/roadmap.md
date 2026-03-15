@@ -43,4 +43,4 @@
 - [✅] Tag v1.0.0
 
 ## Phase 8: Release
-- [ ] Release
+- [✅] Release

@@ -1,26 +1,69 @@
-# Auto‑Fax‑Retry
-A lightweight Python service that sends a PDF to a fax number and automatically retries when the transmission fails. Designed for simple, reliable, unattended monthly faxing without daily attempt limits or email‑based confirmation steps.
+# Auto-Fax-Retry
+
+Lightweight Python service that sends a PDF to a fax number and retries failed attempts automatically. Built for unattended monthly or scheduled fax jobs.
 
 ## Features
--Automatic retry on failed fax attempts, up to a configurable limit
--No Per day cap on attempts
--Direct fax API integration (no email confirmation, no two‑step workflow)
--Logs attempts (including detailed messages to `logs/fax_attempts.log`)
--Notification upon successful send
+- Retry loop with configurable attempts and delay.
+- Phaxio API integration with timeout and error normalization.
+- JSON structured logs with file rotation.
+- Configuration from JSON plus environment variable overrides.
+- CLI overrides for one-off runs and scheduler integration.
+
+## Quick start
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip pytest requests
+```
+
+Configure `config/settings.json` with valid values, especially:
+- `phaxio_api_key`
+- `phaxio_api_secret`
+- `fax_number`
+- `pdf_path`
+- `log_file`
+
+Run:
+```powershell
+python -m src.main
+```
+
+## CLI usage
+```powershell
+python -m src.main --config config/settings.json --fax-number 15551234567 --pdf-path data/sample.pdf --max-attempts 5 --delay-seconds 30 --log-file data/logs/fax.log
+```
+
+Supported arguments:
+- `--config`
+- `--fax-number`
+- `--pdf-path`
+- `--max-attempts`
+- `--delay-seconds`
+- `--log-file`
+
+Exit codes:
+- `0`: fax delivered within retry limits
+- `1`: retry loop exhausted without delivery
+- `2`: configuration/startup validation error
+
+## Production docs
+- Architecture: `docs/architecture.md`
+- Roadmap: `docs/roadmap.md`
+- Operations runbook: `docs/operations_runbook.md`
+- Release prep: `docs/release_prep.md`
+- Changelog: `CHANGELOG.md`
 
 ## Project structure
+```text
 config/
-
 src/
-  fax_api.py       # Wrapper around the chosen fax provider
-  retry_controller.py # Application retry loop; logs via utils/logger
-  utils/logger.py  # Simple timestamped logging helpers
-  main.py          # Example invocation / entry point
-
+  config.py
+  fax_api.py
+  main.py
+  retry_controller.py
+  send_fax_once.py
+  utils/
+    logger.py
+tests/
 docs/
-  architecture.md  # System design and module interactions
-  roadmap.md       # Planned features and milestones
-  notes.md         # Additional design notes
-
-LICENSE
-README.md
+```

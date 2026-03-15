@@ -80,3 +80,22 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     for key in ("phaxio_api_key", "phaxio_api_secret"):
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
+
+    pdf_path = Path(cfg["pdf_path"])
+    if not pdf_path.exists() or not pdf_path.is_file():
+        raise ValueError(f"pdf_path does not exist or is not a file: {cfg['pdf_path']}")
+    if not os.access(pdf_path, os.R_OK):
+        raise ValueError(f"pdf_path is not readable: {cfg['pdf_path']}")
+
+    log_file_path = Path(cfg["log_file"])
+    log_dir = log_file_path.parent if log_file_path.parent != Path("") else Path(".")
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise ValueError(f"Could not create log directory '{log_dir}': {exc}") from exc
+
+    try:
+        with log_file_path.open("a", encoding="utf-8"):
+            pass
+    except OSError as exc:
+        raise ValueError(f"log_file is not writable: {cfg['log_file']} ({exc})") from exc

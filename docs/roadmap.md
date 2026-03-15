@@ -28,25 +28,19 @@
 - [✅] Add validation for missing or invalid config values
 
 ## Phase 5: Real Fax Provider Integration
-- [ ] Replace mock API with a real fax provider
-- [ ] Add error handling for provider‑specific failure modes
-- [ ] Add environment variable support for sensitive values
+- [✅] Replace mock API with a real fax provider
+- [✅] Add error handling for provider‑specific failure modes
+- [✅] Add environment variable support for sensitive values
 
 ## Phase 6: Reliability & automation
-- [ ] Improve logging format (timestamps, attempt numbers, status codes)
-- [ ] Add rotating log files
-- [ ] Add CLI arguments for overrides
-- [ ] Prepare for scheduled/automated execution
+- [✅] Improve logging format (timestamps, attempt numbers, status codes)
+- [✅] Add rotating log files
+- [✅] Add CLI arguments for overrides
+- [✅] Prepare for scheduled/automated execution
 
-## Phase 7: UI
-- [ ] Create UI Dashboard
-- [ ] Send Fax Form
-- [ ] History & Details
-- [ ] Settings and Notifications
-
-## Phase 8: Release Prep
-- [ ] Finalize documentation
+## Phase 7: Release Prep
+- [✅] Finalize documentation
 - [ ] Tag v1.0.0
 
-## Phase 9: Release
+## Phase 8: Release
 - [ ] Release

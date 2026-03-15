@@ -10,15 +10,23 @@ def make_temp_config(tmp_path, data):
     return p
 
 
+def make_paths(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4\n%mock\n")
+    log_file = tmp_path / "logs" / "fax.log"
+    return str(pdf_path), str(log_file)
+
+
 def test_load_config_file_only(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
     data = {
         "phaxio_api_key": "k",
         "phaxio_api_secret": "s",
         "fax_number": "123",
-        "pdf_path": "file.pdf",
+        "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,
-        "log_file": "log.txt",
+        "log_file": log_file,
     }
     cfg_file = make_temp_config(tmp_path, data)
     cfg = config_module.load_config(cfg_file)
@@ -26,14 +34,15 @@ def test_load_config_file_only(tmp_path):
 
 
 def test_env_overrides(tmp_path, monkeypatch):
+    pdf_path, log_file = make_paths(tmp_path)
     data = {
         "phaxio_api_key": "k",
         "phaxio_api_secret": "s",
         "fax_number": "123",
-        "pdf_path": "file.pdf",
+        "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,
-        "log_file": "log.txt",
+        "log_file": log_file,
     }
     cfg_file = make_temp_config(tmp_path, data)
     monkeypatch.setenv("FAX_NUMBER", "999")

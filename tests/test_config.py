@@ -78,3 +78,91 @@ def test_invalid_types(tmp_path):
         assert False
     except ValueError:
         pass
+
+
+def test_pdf_paths_list_is_supported(tmp_path):
+    pdf1, log_file = make_paths(tmp_path)
+    pdf2 = tmp_path / "sample2.pdf"
+    pdf2.write_bytes(b"%PDF-1.4\n%mock2\n")
+
+    data = {
+        "phaxio_api_key": "k",
+        "phaxio_api_secret": "s",
+        "fax_number": "123",
+        "pdf_paths": [pdf1, str(pdf2)],
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+        "cover_page_text": "Hello",
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+    cfg = config_module.load_config(cfg_file)
+
+    assert cfg["pdf_paths"] == [pdf1, str(pdf2)]
+    assert cfg["cover_page_text"] == "Hello"
+
+
+def test_cover_page_text_must_be_string(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
+    data = {
+        "phaxio_api_key": "k",
+        "phaxio_api_secret": "s",
+        "fax_number": "123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+        "cover_page_text": 123,
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+
+    try:
+        config_module.load_config(cfg_file)
+        assert False
+    except ValueError as exc:
+        assert "cover_page_text" in str(exc)
+
+
+def test_cover_page_file_validation(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
+    cover_pdf = tmp_path / "cover.pdf"
+    cover_pdf.write_bytes(b"%PDF-1.4\n%cover\n")
+
+    data = {
+        "phaxio_api_key": "k",
+        "phaxio_api_secret": "s",
+        "fax_number": "123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+        "cover_page_file": str(cover_pdf),
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+    cfg = config_module.load_config(cfg_file)
+    assert cfg["cover_page_file"] == str(cover_pdf)
+
+
+def test_cover_page_text_and_file_are_mutually_exclusive(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
+    cover_pdf = tmp_path / "cover.pdf"
+    cover_pdf.write_bytes(b"%PDF-1.4\n%cover\n")
+
+    data = {
+        "phaxio_api_key": "k",
+        "phaxio_api_secret": "s",
+        "fax_number": "123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+        "cover_page_text": "hello",
+        "cover_page_file": str(cover_pdf),
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+
+    try:
+        config_module.load_config(cfg_file)
+        assert False
+    except ValueError as exc:
+        assert "either cover_page_text or cover_page_file" in str(exc)

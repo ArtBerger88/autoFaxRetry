@@ -3,6 +3,9 @@
     "phaxio_api_secret": "YOUR_API_SECRET_HERE", 
     "fax_number": "15551234567", 
     "pdf_path": "data/sample.pdf", 
+    "pdf_paths": ["data/sample.pdf"],
+    "cover_page_text": "", 
+    "cover_page_file": null, 
     "max_attempts": 20, 
     "delay_seconds": 300, 
     "log_file": "data/logs/faxLogs.log" 

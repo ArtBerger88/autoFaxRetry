@@ -11,6 +11,8 @@ _ENV_OVERRIDES = {
     "PHAXIO_API_SECRET": "phaxio_api_secret",
     "FAX_NUMBER": "fax_number",
     "PDF_PATH": "pdf_path",
+    "PDF_PATHS": "pdf_paths",
+    "COVER_PAGE_FILE": "cover_page_file",
     "MAX_ATTEMPTS": "max_attempts",
     "DELAY_SECONDS": "delay_seconds",
     "LOG_FILE": "log_file",
@@ -46,6 +48,8 @@ def load_config(path: Union[str, Path] = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
                     val = int(val) if cfg_key == "max_attempts" else float(val)
                 except ValueError:
                     raise ValueError(f"{env_key} must be a number")
+            if cfg_key == "pdf_paths":
+                val = [part.strip() for part in str(val).split(",") if part.strip()]
             cfg[cfg_key] = val
 
     _validate_config(cfg)
@@ -58,7 +62,6 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         "phaxio_api_key",
         "phaxio_api_secret",
         "fax_number",
-        "pdf_path",
         "max_attempts",
         "delay_seconds",
         "log_file",
@@ -73,7 +76,7 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     if not isinstance(cfg["delay_seconds"], (int, float)) or cfg["delay_seconds"] < 0:
         raise ValueError("delay_seconds must be a non-negative number")
 
-    for key in ("fax_number", "pdf_path", "log_file"):
+    for key in ("fax_number", "log_file"):
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
 
@@ -81,11 +84,44 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
 
-    pdf_path = Path(cfg["pdf_path"])
-    if not pdf_path.exists() or not pdf_path.is_file():
-        raise ValueError(f"pdf_path does not exist or is not a file: {cfg['pdf_path']}")
-    if not os.access(pdf_path, os.R_OK):
-        raise ValueError(f"pdf_path is not readable: {cfg['pdf_path']}")
+    pdf_paths: list[str] = []
+    if "pdf_paths" in cfg:
+        if not isinstance(cfg["pdf_paths"], list) or not cfg["pdf_paths"]:
+            raise ValueError("pdf_paths must be a non-empty list of file paths")
+        if any(not isinstance(p, str) or not p.strip() for p in cfg["pdf_paths"]):
+            raise ValueError("pdf_paths must contain non-empty strings")
+        pdf_paths = [str(p).strip() for p in cfg["pdf_paths"]]
+    elif "pdf_path" in cfg:
+        if not isinstance(cfg["pdf_path"], str) or not cfg["pdf_path"].strip():
+            raise ValueError("pdf_path must be a non-empty string")
+        pdf_paths = [cfg["pdf_path"].strip()]
+    else:
+        raise ValueError("Either pdf_path or pdf_paths must be provided")
+
+    for one_path in pdf_paths:
+        path_obj = Path(one_path)
+        if not path_obj.exists() or not path_obj.is_file():
+            raise ValueError(f"PDF path does not exist or is not a file: {one_path}")
+        if not os.access(path_obj, os.R_OK):
+            raise ValueError(f"PDF path is not readable: {one_path}")
+
+    if "cover_page_text" in cfg and cfg["cover_page_text"] is not None:
+        if not isinstance(cfg["cover_page_text"], str):
+            raise ValueError("cover_page_text must be a string")
+
+    if "cover_page_file" in cfg and cfg["cover_page_file"] is not None:
+        if not isinstance(cfg["cover_page_file"], str) or not cfg["cover_page_file"].strip():
+            raise ValueError("cover_page_file must be a non-empty string")
+        cover_file = Path(cfg["cover_page_file"].strip())
+        if not cover_file.exists() or not cover_file.is_file():
+            raise ValueError(
+                f"cover_page_file does not exist or is not a file: {cfg['cover_page_file']}"
+            )
+        if not os.access(cover_file, os.R_OK):
+            raise ValueError(f"cover_page_file is not readable: {cfg['cover_page_file']}")
+
+    if cfg.get("cover_page_text") and cfg.get("cover_page_file"):
+        raise ValueError("Provide either cover_page_text or cover_page_file, not both")
 
     log_file_path = Path(cfg["log_file"])
     log_dir = log_file_path.parent if log_file_path.parent != Path("") else Path(".")

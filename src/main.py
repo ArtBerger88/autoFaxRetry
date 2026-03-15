@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from src import config as config_module
+from src.document_builder import prepare_fax_document
 from src.fax_api import PhaxioAPI
 from src.retry_controller import run_retry_loop
 
@@ -30,7 +31,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to settings JSON file",
     )
     parser.add_argument("--fax-number", help="Override target fax number")
-    parser.add_argument("--pdf-path", help="Override PDF file path")
+    parser.add_argument(
+        "--pdf-path",
+        dest="pdf_paths",
+        action="append",
+        help="Override PDF file path (repeat for multiple documents)",
+    )
+    parser.add_argument(
+        "--cover-page-text",
+        help="Optional plain-text cover page to prepend before merged documents",
+    )
+    parser.add_argument(
+        "--cover-page-file",
+        help="Optional PDF cover page file to prepend before merged documents",
+    )
     parser.add_argument("--max-attempts", type=_positive_int, help="Override max retry attempts")
     parser.add_argument(
         "--delay-seconds",
@@ -45,8 +59,13 @@ def _apply_cli_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[
     merged = dict(cfg)
     if args.fax_number is not None:
         merged["fax_number"] = args.fax_number
-    if args.pdf_path is not None:
-        merged["pdf_path"] = args.pdf_path
+    if args.pdf_paths is not None:
+        merged["pdf_paths"] = list(args.pdf_paths)
+        merged["pdf_path"] = args.pdf_paths[0]
+    if args.cover_page_text is not None:
+        merged["cover_page_text"] = args.cover_page_text
+    if args.cover_page_file is not None:
+        merged["cover_page_file"] = args.cover_page_file
     if args.max_attempts is not None:
         merged["max_attempts"] = args.max_attempts
     if args.delay_seconds is not None:
@@ -59,11 +78,19 @@ def _apply_cli_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[
 
 def main(argv: Optional[list[str]] = None) -> int:
     args = build_parser().parse_args(argv)
+    temp_dir = None
 
     try:
         cfg = config_module.load_config(Path(args.config))
         cfg = _apply_cli_overrides(cfg, args)
-    except (FileNotFoundError, ValueError) as exc:
+        source_pdf_paths = cfg.get("pdf_paths") or [cfg["pdf_path"]]
+        prepared_pdf_path, temp_dir = prepare_fax_document(
+            source_pdf_paths,
+            cfg.get("cover_page_text"),
+            cfg.get("cover_page_file"),
+        )
+        cfg["pdf_path"] = prepared_pdf_path
+    except (FileNotFoundError, ValueError, RuntimeError) as exc:
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 2
 
@@ -72,8 +99,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         cfg["phaxio_api_secret"],
     )
 
-    success = run_retry_loop(api, cfg)
-    return 0 if success else 1
+    try:
+        success = run_retry_loop(api, cfg)
+        return 0 if success else 1
+    finally:
+        if temp_dir is not None:
+            temp_dir.cleanup()
 
 
 if __name__ == "__main__":

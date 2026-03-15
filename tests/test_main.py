@@ -19,8 +19,12 @@ def make_base_cfg(tmp_path):
 
 def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     cfg = make_base_cfg(tmp_path)
-    override_pdf = tmp_path / "override.pdf"
-    override_pdf.write_bytes(b"%PDF-1.4\n%override\n")
+    override_pdf_a = tmp_path / "override_a.pdf"
+    override_pdf_b = tmp_path / "override_b.pdf"
+    override_pdf_a.write_bytes(b"%PDF-1.4\n%override-a\n")
+    override_pdf_b.write_bytes(b"%PDF-1.4\n%override-b\n")
+    cover_pdf = tmp_path / "cover.pdf"
+    cover_pdf.write_bytes(b"%PDF-1.4\n%cover\n")
 
     captured = {}
 
@@ -32,6 +36,14 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
             captured["api_secret"] = secret
 
     monkeypatch.setattr("src.main.PhaxioAPI", FakeApi)
+
+    def fake_prepare(pdf_paths, cover_page_text, cover_page_file):
+        captured["prepared_pdf_paths"] = pdf_paths
+        captured["cover_page_text"] = cover_page_text
+        captured["cover_page_file"] = cover_page_file
+        return str(override_pdf_a), None
+
+    monkeypatch.setattr("src.main.prepare_fax_document", fake_prepare)
 
     def fake_run_retry_loop(api, run_cfg):
         captured["cfg"] = run_cfg
@@ -46,13 +58,17 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
             "--fax-number",
             "9998887777",
             "--pdf-path",
-            str(override_pdf),
+            str(override_pdf_a),
+            "--pdf-path",
+            str(override_pdf_b),
             "--max-attempts",
             "5",
             "--delay-seconds",
             "2.5",
             "--log-file",
             str(tmp_path / "custom" / "log.jsonl"),
+            "--cover-page-file",
+            str(cover_pdf),
         ]
     )
 
@@ -60,7 +76,10 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     assert captured["api_key"] == "k"
     assert captured["api_secret"] == "s"
     assert captured["cfg"]["fax_number"] == "9998887777"
-    assert captured["cfg"]["pdf_path"] == str(override_pdf)
+    assert captured["cfg"]["pdf_path"] == str(override_pdf_a)
+    assert captured["prepared_pdf_paths"] == [str(override_pdf_a), str(override_pdf_b)]
+    assert captured["cover_page_text"] is None
+    assert captured["cover_page_file"] == str(cover_pdf)
     assert captured["cfg"]["max_attempts"] == 5
     assert captured["cfg"]["delay_seconds"] == 2.5
     assert captured["cfg"]["log_file"].endswith("log.jsonl")
@@ -84,6 +103,7 @@ def test_main_returns_failure_exit_code(monkeypatch, tmp_path):
 
     monkeypatch.setattr("src.main.config_module.load_config", lambda _: dict(cfg))
     monkeypatch.setattr("src.main.run_retry_loop", lambda *_: False)
+    monkeypatch.setattr("src.main.prepare_fax_document", lambda p, c, f: (p[0], None))
 
     class DummyApi:
         def __init__(self, *args):

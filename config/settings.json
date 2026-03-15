@@ -7,6 +7,6 @@
     "cover_page_text": "", 
     "cover_page_file": null, 
     "max_attempts": 20, 
-    "delay_seconds": 300, 
+    "delay_seconds": 10, 
     "log_file": "data/logs/faxLogs.log" 
 }

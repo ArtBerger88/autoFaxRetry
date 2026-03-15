@@ -40,7 +40,7 @@
 
 ## Phase 7: Release Prep
 - [✅] Finalize documentation
-- [ ] Tag v1.0.0
+- [✅] Tag v1.0.0
 
 ## Phase 8: Release
 - [ ] Release

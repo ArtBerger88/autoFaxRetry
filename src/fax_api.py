@@ -4,20 +4,26 @@ from typing import Any, Dict, Optional
 import requests
 
 
-class PhaxioAPI:
-    """Small wrapper around the Phaxio REST API."""
+class SinchFaxAPI:
+    """Small wrapper around the Sinch Fax REST API."""
 
     def __init__(
         self,
-        api_key: str,
-        api_secret: str,
-        base_url: str = "https://api.phaxio.com/v2.1",
+        project_id: str,
+        key_id: str,
+        key_secret: str,
+        base_url: str = "https://fax.api.sinch.com",
         timeout: tuple[float, float] = (10.0, 30.0),
     ):
         self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
-        self.api_secret = api_secret
+        self.project_id = project_id
+        self.key_id = key_id
+        self.key_secret = key_secret
         self.timeout = timeout
+
+    @property
+    def _project_base(self) -> str:
+        return f"{self.base_url}/v3/projects/{self.project_id}"
 
     @staticmethod
     def _safe_json(response: requests.Response) -> Optional[Dict[str, Any]]:
@@ -29,7 +35,7 @@ class PhaxioAPI:
 
     def send_fax(self, to_number: str, pdf_path: str) -> Dict[str, Any]:
         """Submit a fax and return a normalized result dictionary."""
-        url = f"{self.base_url}/faxes"
+        url = f"{self._project_base}/faxes"
         file_path = Path(pdf_path)
 
         if not file_path.exists() or not file_path.is_file():
@@ -45,8 +51,8 @@ class PhaxioAPI:
             with file_path.open("rb") as file_obj:
                 response = requests.post(
                     url,
-                    auth=(self.api_key, self.api_secret),
-                    files={"file": file_obj},
+                    auth=(self.key_id, self.key_secret),
+                    files={"file": (file_path.name, file_obj, "application/pdf")},
                     data={"to": to_number},
                     timeout=self.timeout,
                 )
@@ -81,13 +87,17 @@ class PhaxioAPI:
             return {
                 "success": False,
                 "fax_id": None,
-                "message": payload.get("message", "Provider HTTP error."),
+                "message": str(
+                    payload.get("message")
+                    or payload.get("errorMessage")
+                    or "Provider HTTP error."
+                ),
                 "error_code": "http_error",
                 "status_code": response.status_code,
             }
 
-        if payload.get("success"):
-            fax_id = payload.get("data", {}).get("id")
+        fax_id = payload.get("id")
+        if fax_id:
             return {
                 "success": True,
                 "fax_id": fax_id,
@@ -99,19 +109,23 @@ class PhaxioAPI:
         return {
             "success": False,
             "fax_id": None,
-            "message": payload.get("message", "Unknown provider error."),
+            "message": str(
+                payload.get("message")
+                or payload.get("errorMessage")
+                or "Unknown provider error."
+            ),
             "error_code": "provider_error",
             "status_code": response.status_code,
         }
 
-    def get_fax_status(self, fax_id: int) -> str:
+    def get_fax_status(self, fax_id: Any) -> str:
         """Return one of: success, failure, in_progress."""
-        url = f"{self.base_url}/faxes/{fax_id}"
+        url = f"{self._project_base}/faxes/{fax_id}"
 
         try:
             response = requests.get(
                 url,
-                auth=(self.api_key, self.api_secret),
+                auth=(self.key_id, self.key_secret),
                 timeout=self.timeout,
             )
         except requests.RequestException:
@@ -121,9 +135,13 @@ class PhaxioAPI:
         if payload is None or not response.ok:
             return "failure"
 
-        status = str(payload.get("data", {}).get("status", "")).lower()
-        if status in {"success", "delivered"}:
+        status = str(payload.get("status", "")).upper()
+        if status == "COMPLETED":
             return "success"
-        if status in {"failure", "failed", "canceled"}:
+        if status == "FAILURE":
             return "failure"
         return "in_progress"
+
+
+# Backwards-compatible alias while callers migrate naming.
+PhaxioAPI = SinchFaxAPI

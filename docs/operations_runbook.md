@@ -5,17 +5,18 @@ Use this guide to run Auto-Fax-Retry safely in production and troubleshoot failu
 
 ## Pre-deployment checklist
 - Python 3.11+ installed.
-- Valid Phaxio credentials configured.
+- Valid Sinch Fax credentials configured.
 - `pdf_path` points to a readable file.
 - `log_file` directory is writable.
-- Outbound HTTPS access to `api.phaxio.com` is allowed.
+- Outbound HTTPS access to `fax.api.sinch.com` is allowed.
 
 ## Configuration
 Primary config file: `config/settings.json`
 
 Sensitive values should come from environment variables:
-- `PHAXIO_API_KEY`
-- `PHAXIO_API_SECRET`
+- `SINCH_PROJECT_ID`
+- `SINCH_KEY_ID`
+- `SINCH_KEY_SECRET`
 - `FAX_NUMBER`
 - `PDF_PATH`
 - `MAX_ATTEMPTS`

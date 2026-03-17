@@ -7,9 +7,10 @@ def make_base_cfg(tmp_path):
     pdf = tmp_path / "sample.pdf"
     pdf.write_bytes(b"%PDF-1.4\n%mock\n")
     return {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "1112223333",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+1112223333",
         "pdf_path": str(pdf),
         "max_attempts": 3,
         "delay_seconds": 1,
@@ -31,11 +32,13 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     monkeypatch.setattr("src.main.config_module.load_config", lambda _: dict(cfg))
 
     class FakeApi:
-        def __init__(self, key, secret):
-            captured["api_key"] = key
-            captured["api_secret"] = secret
+        def __init__(self, project_id, key_id, key_secret, base_url):
+            captured["project_id"] = project_id
+            captured["key_id"] = key_id
+            captured["key_secret"] = key_secret
+            captured["base_url"] = base_url
 
-    monkeypatch.setattr("src.main.PhaxioAPI", FakeApi)
+    monkeypatch.setattr("src.main.SinchFaxAPI", FakeApi)
 
     def fake_prepare(pdf_paths, cover_page_text, cover_page_file):
         captured["prepared_pdf_paths"] = pdf_paths
@@ -56,7 +59,7 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
             "--config",
             "config/settings.json",
             "--fax-number",
-            "9998887777",
+            "+19998887777",
             "--pdf-path",
             str(override_pdf_a),
             "--pdf-path",
@@ -73,9 +76,11 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     )
 
     assert rc == 0
-    assert captured["api_key"] == "k"
-    assert captured["api_secret"] == "s"
-    assert captured["cfg"]["fax_number"] == "9998887777"
+    assert captured["project_id"] == "proj-123"
+    assert captured["key_id"] == "k"
+    assert captured["key_secret"] == "s"
+    assert captured["base_url"] == "https://fax.api.sinch.com"
+    assert captured["cfg"]["fax_number"] == "+19998887777"
     assert captured["cfg"]["pdf_path"] == str(override_pdf_a)
     assert captured["prepared_pdf_paths"] == [str(override_pdf_a), str(override_pdf_b)]
     assert captured["cover_page_text"] is None
@@ -106,10 +111,10 @@ def test_main_returns_failure_exit_code(monkeypatch, tmp_path):
     monkeypatch.setattr("src.main.prepare_fax_document", lambda p, c, f: (p[0], None))
 
     class DummyApi:
-        def __init__(self, *args):
+        def __init__(self, *args, **kwargs):
             pass
 
-    monkeypatch.setattr("src.main.PhaxioAPI", DummyApi)
+    monkeypatch.setattr("src.main.SinchFaxAPI", DummyApi)
 
     rc = main_module.main([])
     assert rc == 1

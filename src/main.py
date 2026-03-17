@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from src import config as config_module
 from src.document_builder import prepare_fax_document
-from src.fax_api import PhaxioAPI
+from src.fax_api import SinchFaxAPI
 from src.retry_controller import run_retry_loop
 
 
@@ -94,9 +94,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 2
 
-    api = PhaxioAPI(
-        cfg["phaxio_api_key"],
-        cfg["phaxio_api_secret"],
+    api = SinchFaxAPI(
+        project_id=cfg["sinch_project_id"],
+        key_id=cfg["sinch_key_id"],
+        key_secret=cfg["sinch_key_secret"],
+        base_url=cfg.get("sinch_base_url", "https://fax.api.sinch.com"),
     )
 
     try:

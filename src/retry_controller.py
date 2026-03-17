@@ -29,8 +29,8 @@ def run_retry_loop(api, config):
         log_file,
         run_id=run_id,
         api_base_url=getattr(api, "base_url", "unknown"),
-        key_fp=_fingerprint(str(config.get("phaxio_api_key", ""))),
-        secret_fp=_fingerprint(str(config.get("phaxio_api_secret", ""))),
+        key_fp=_fingerprint(str(config.get("sinch_key_id", ""))),
+        secret_fp=_fingerprint(str(config.get("sinch_key_secret", ""))),
     )
 
     for attempt in range(1, max_attempts + 1):

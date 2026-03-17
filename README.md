@@ -4,7 +4,7 @@ Lightweight Python service that sends a PDF to a fax number and retries failed a
 
 ## Features
 - Retry loop with configurable attempts and delay.
-- Phaxio API integration with timeout and error normalization.
+- Sinch Fax API integration with timeout and error normalization.
 - JSON structured logs with file rotation.
 - Configuration from JSON plus environment variable overrides.
 - CLI overrides for one-off runs and scheduler integration.
@@ -19,8 +19,9 @@ python -m pip install -U pip pytest requests
 ```
 
 Configure `config/settings.json` with valid values, especially:
-- `phaxio_api_key`
-- `phaxio_api_secret`
+- `sinch_project_id`
+- `sinch_key_id`
+- `sinch_key_secret`
 - `fax_number`
 - `pdf_path`
 - `log_file`

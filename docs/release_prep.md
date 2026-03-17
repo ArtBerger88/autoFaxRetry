@@ -34,7 +34,7 @@ git push origin v1.0.0
 ```
 
 ## Suggested release notes
-- Production-ready fax retry worker using Phaxio.
+- Production-ready fax retry worker using Sinch Fax API.
 - Structured rotating logs for operational visibility.
 - CLI overrides and deterministic exit codes for scheduler integration.
 - Expanded unit test coverage across API wrapper and CLI paths.

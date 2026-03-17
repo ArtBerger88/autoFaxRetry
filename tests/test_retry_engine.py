@@ -18,7 +18,7 @@ def test_run_retry_loop_logs_and_stops(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("src.retry_controller.send_fax_once", fake_send)
 
     config = {
-        "fax_number": "123",
+        "fax_number": "+123",
         "pdf_path": "file.pdf",
         "max_attempts": 3,
         "delay_seconds": 0,

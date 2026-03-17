@@ -29,10 +29,11 @@ def send_fax_once(api, fax_number, pdf_path):
                     "success": True, "message": "Fax delivered successfully." 
                 } 
             
-            if status == "failure": 
-                return { 
-                    "success": False, "message": "Fax failed according to Phaxio." 
-                } 
+            if status == "failure":
+                return {
+                    "success": False,
+                    "message": "Fax failed according to provider.",
+                }
             
             time.sleep(5) 
             

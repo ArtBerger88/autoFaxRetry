@@ -20,9 +20,10 @@ def make_paths(tmp_path):
 def test_load_config_file_only(tmp_path):
     pdf_path, log_file = make_paths(tmp_path)
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,
@@ -36,24 +37,25 @@ def test_load_config_file_only(tmp_path):
 def test_env_overrides(tmp_path, monkeypatch):
     pdf_path, log_file = make_paths(tmp_path)
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,
         "log_file": log_file,
     }
     cfg_file = make_temp_config(tmp_path, data)
-    monkeypatch.setenv("FAX_NUMBER", "999")
+    monkeypatch.setenv("FAX_NUMBER", "+999")
     monkeypatch.setenv("MAX_ATTEMPTS", "5")
     cfg = config_module.load_config(cfg_file)
-    assert cfg["fax_number"] == "999"
+    assert cfg["fax_number"] == "+999"
     assert cfg["max_attempts"] == 5
 
 
 def test_missing_keys(tmp_path):
-    data = {"fax_number": "123"}
+    data = {"fax_number": "+123"}
     cfg_file = make_temp_config(tmp_path, data)
     try:
         config_module.load_config(cfg_file)
@@ -64,9 +66,10 @@ def test_missing_keys(tmp_path):
 
 def test_invalid_types(tmp_path):
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_path": "file.pdf",
         "max_attempts": "notint",
         "delay_seconds": -1,
@@ -86,9 +89,10 @@ def test_pdf_paths_list_is_supported(tmp_path):
     pdf2.write_bytes(b"%PDF-1.4\n%mock2\n")
 
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_paths": [pdf1, str(pdf2)],
         "max_attempts": 3,
         "delay_seconds": 1,
@@ -105,9 +109,10 @@ def test_pdf_paths_list_is_supported(tmp_path):
 def test_cover_page_text_must_be_string(tmp_path):
     pdf_path, log_file = make_paths(tmp_path)
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,
@@ -129,9 +134,10 @@ def test_cover_page_file_validation(tmp_path):
     cover_pdf.write_bytes(b"%PDF-1.4\n%cover\n")
 
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,
@@ -149,9 +155,10 @@ def test_cover_page_text_and_file_are_mutually_exclusive(tmp_path):
     cover_pdf.write_bytes(b"%PDF-1.4\n%cover\n")
 
     data = {
-        "phaxio_api_key": "k",
-        "phaxio_api_secret": "s",
-        "fax_number": "123",
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
         "pdf_path": pdf_path,
         "max_attempts": 3,
         "delay_seconds": 1,

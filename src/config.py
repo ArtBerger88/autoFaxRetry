@@ -7,8 +7,10 @@ DEFAULT_CONFIG_PATH = Path("config/settings.json")
 
 # mapping of environment variable -> configuration key
 _ENV_OVERRIDES = {
-    "PHAXIO_API_KEY": "phaxio_api_key",
-    "PHAXIO_API_SECRET": "phaxio_api_secret",
+    "SINCH_PROJECT_ID": "sinch_project_id",
+    "SINCH_KEY_ID": "sinch_key_id",
+    "SINCH_KEY_SECRET": "sinch_key_secret",
+    "SINCH_BASE_URL": "sinch_base_url",
     "FAX_NUMBER": "fax_number",
     "PDF_PATH": "pdf_path",
     "PDF_PATHS": "pdf_paths",
@@ -59,8 +61,9 @@ def load_config(path: Union[str, Path] = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
 def _validate_config(cfg: Dict[str, Any]) -> None:
     """Raise ``ValueError`` if the configuration dictionary is invalid."""
     required = [
-        "phaxio_api_key",
-        "phaxio_api_secret",
+        "sinch_project_id",
+        "sinch_key_id",
+        "sinch_key_secret",
         "fax_number",
         "max_attempts",
         "delay_seconds",
@@ -80,9 +83,17 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
 
-    for key in ("phaxio_api_key", "phaxio_api_secret"):
+    fax_number = str(cfg["fax_number"]).strip()
+    if not fax_number.startswith("+"):
+        raise ValueError("fax_number must be in E.164 format (for example +14155551234)")
+
+    for key in ("sinch_project_id", "sinch_key_id", "sinch_key_secret"):
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
+
+    if "sinch_base_url" in cfg and cfg["sinch_base_url"] is not None:
+        if not isinstance(cfg["sinch_base_url"], str) or not cfg["sinch_base_url"].strip():
+            raise ValueError("sinch_base_url must be a non-empty string when provided")
 
     pdf_paths: list[str] = []
     if "pdf_paths" in cfg:

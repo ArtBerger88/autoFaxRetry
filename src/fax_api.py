@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 from typing import Any, Dict, Optional
 
 import requests
@@ -14,12 +15,16 @@ class SinchFaxAPI:
         key_secret: str,
         base_url: str = "https://fax.api.sinch.com",
         timeout: tuple[float, float] = (10.0, 30.0),
+        network_retries: int = 2,
+        network_retry_backoff: float = 1.0,
     ):
         self.base_url = base_url.rstrip("/")
         self.project_id = project_id
         self.key_id = key_id
         self.key_secret = key_secret
         self.timeout = timeout
+        self.network_retries = max(0, int(network_retries))
+        self.network_retry_backoff = max(0.0, float(network_retry_backoff))
 
     @property
     def _project_base(self) -> str:
@@ -32,6 +37,21 @@ class SinchFaxAPI:
             return payload if isinstance(payload, dict) else None
         except ValueError:
             return None
+
+    @staticmethod
+    def _is_transient_network_error(exc: requests.RequestException) -> bool:
+        # SSL EOF and similar transport failures can be transient and benefit from
+        # a short in-call retry before counting as a full retry-loop failure.
+        if isinstance(
+            exc,
+            (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.SSLError,
+            ),
+        ):
+            return True
+        return "SSLEOFError" in str(exc)
 
     def send_fax(self, to_number: str, pdf_path: str) -> Dict[str, Any]:
         """Submit a fax and return a normalized result dictionary."""
@@ -47,29 +67,50 @@ class SinchFaxAPI:
                 "status_code": None,
             }
 
-        try:
-            with file_path.open("rb") as file_obj:
-                response = requests.post(
-                    url,
-                    auth=(self.key_id, self.key_secret),
-                    files={"file": (file_path.name, file_obj, "application/pdf")},
-                    data={"to": to_number},
-                    timeout=self.timeout,
+        response: Optional[requests.Response] = None
+        last_network_error: Optional[requests.RequestException] = None
+
+        for network_attempt in range(1, self.network_retries + 2):
+            try:
+                with file_path.open("rb") as file_obj:
+                    response = requests.post(
+                        url,
+                        auth=(self.key_id, self.key_secret),
+                        files={"file": (file_path.name, file_obj, "application/pdf")},
+                        data={"to": to_number},
+                        timeout=self.timeout,
+                        headers={"Connection": "close"},
+                    )
+                break
+            except requests.RequestException as exc:
+                last_network_error = exc
+                if network_attempt > self.network_retries or not self._is_transient_network_error(exc):
+                    break
+                if self.network_retry_backoff > 0:
+                    time.sleep(self.network_retry_backoff * network_attempt)
+            except OSError as exc:
+                return {
+                    "success": False,
+                    "fax_id": None,
+                    "message": f"Failed to open PDF file: {exc}",
+                    "error_code": "file_read_error",
+                    "status_code": None,
+                }
+
+        if response is None:
+            if isinstance(last_network_error, requests.exceptions.SSLError) or (
+                last_network_error is not None and "SSLEOFError" in str(last_network_error)
+            ):
+                message = (
+                    f"Network SSL handshake error while submitting fax: {last_network_error}"
                 )
-        except requests.RequestException as exc:
+            else:
+                message = f"Network error while submitting fax: {last_network_error}"
             return {
                 "success": False,
                 "fax_id": None,
-                "message": f"Network error while submitting fax: {exc}",
+                "message": message,
                 "error_code": "network_error",
-                "status_code": None,
-            }
-        except OSError as exc:
-            return {
-                "success": False,
-                "fax_id": None,
-                "message": f"Failed to open PDF file: {exc}",
-                "error_code": "file_read_error",
                 "status_code": None,
             }
 

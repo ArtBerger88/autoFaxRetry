@@ -1,8 +1,13 @@
 import time
+from hashlib import sha256
 from uuid import uuid4
 
 from src.send_fax_once import send_fax_once
 from src.utils.logger import log, log_attempt
+
+
+def _fingerprint(value: str) -> str:
+    return sha256(value.encode("utf-8")).hexdigest()[:12]
 
 def run_retry_loop(api, config):
     """Run retries until success or max attempts is reached."""
@@ -18,6 +23,14 @@ def run_retry_loop(api, config):
         f"Starting retry loop for {pdf_path} -> {fax_number}",
         log_file,
         run_id=run_id,
+    )
+    log(
+        "Runtime auth context",
+        log_file,
+        run_id=run_id,
+        api_base_url=getattr(api, "base_url", "unknown"),
+        key_fp=_fingerprint(str(config.get("phaxio_api_key", ""))),
+        secret_fp=_fingerprint(str(config.get("phaxio_api_secret", ""))),
     )
 
     for attempt in range(1, max_attempts + 1):

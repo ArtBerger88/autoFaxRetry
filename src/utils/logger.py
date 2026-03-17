@@ -62,6 +62,11 @@ def log_attempt(log_file: str, attempt_number: int, result: Dict[str, Any], **fi
     status = "SUCCESS" if success else "FAILURE"
     message = str(result.get("message", ""))
     summary = f"Attempt {attempt_number}: {status} - {message}"
+    extra_result_fields = {
+        key: value
+        for key, value in result.items()
+        if key not in {"success", "message"}
+    }
 
     _emit(
         log_file,
@@ -71,5 +76,6 @@ def log_attempt(log_file: str, attempt_number: int, result: Dict[str, Any], **fi
         status=status,
         message=message,
         summary=summary,
+        **extra_result_fields,
         **fields,
     )

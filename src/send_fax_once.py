@@ -10,10 +10,13 @@ def send_fax_once(api, fax_number, pdf_path):
         submit = api.send_fax(fax_number, pdf_path) 
         
         if not submit["success"]: 
-            return { 
-                "success": False, 
-                "message": f"Submission failed: {submit['message']}" 
-            } 
+            return {
+                "success": False,
+                "message": f"Submission failed: {submit['message']}",
+                "error_code": submit.get("error_code"),
+                "status_code": submit.get("status_code"),
+                "fax_id": submit.get("fax_id"),
+            }
         fax_id = submit["fax_id"] 
         
         # Poll for up to 60 seconds 

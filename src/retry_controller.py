@@ -9,6 +9,13 @@ from src.utils.logger import log, log_attempt
 def _fingerprint(value: str) -> str:
     return sha256(value.encode("utf-8")).hexdigest()[:12]
 
+
+def _is_fatal_auth_error(result: dict) -> bool:
+    return (
+        str(result.get("error_code")) == "http_error"
+        and int(result.get("status_code") or 0) in (401, 403)
+    )
+
 def run_retry_loop(api, config):
     """Run retries until success or max attempts is reached."""
     fax_number = config["fax_number"]
@@ -43,6 +50,12 @@ def run_retry_loop(api, config):
             print(msg)
             log(msg, log_file, run_id=run_id)
             return True
+
+        if _is_fatal_auth_error(result):
+            msg = "Stopping retries: provider rejected authentication (HTTP 401/403)."
+            print(msg)
+            log(msg, log_file, run_id=run_id)
+            return False
 
         msg = f"Attempt {attempt} failed. Retrying in {delay} seconds..."
         print(msg)

@@ -82,6 +82,22 @@ def test_send_fax_non_json_response(monkeypatch, tmp_path):
     assert result["status_code"] == 502
 
 
+def test_send_fax_non_json_unauthorized_maps_to_http_error(monkeypatch, tmp_path):
+    pdf_path = make_pdf(tmp_path)
+
+    def fake_post(*args, **kwargs):
+        return FakeResponse(status_code=401, json_error=ValueError("bad json"))
+
+    monkeypatch.setattr("src.fax_api.requests.post", fake_post)
+    api = SinchFaxAPI("project", "k", "s")
+
+    result = api.send_fax("+15551234567", str(pdf_path))
+    assert result["success"] is False
+    assert result["error_code"] == "http_error"
+    assert result["status_code"] == 401
+    assert "Unauthorized by provider" in result["message"]
+
+
 def test_send_fax_http_error_with_provider_message(monkeypatch, tmp_path):
     pdf_path = make_pdf(tmp_path)
 

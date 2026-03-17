@@ -17,7 +17,10 @@ def make_paths(tmp_path):
     return str(pdf_path), str(log_file)
 
 
-def test_load_config_file_only(tmp_path):
+def test_load_config_file_only(tmp_path, monkeypatch):
+    for env_key in config_module._ENV_OVERRIDES:
+        monkeypatch.delenv(env_key, raising=False)
+
     pdf_path, log_file = make_paths(tmp_path)
     data = {
         "sinch_project_id": "proj-123",
@@ -173,3 +176,49 @@ def test_cover_page_text_and_file_are_mutually_exclusive(tmp_path):
         assert False
     except ValueError as exc:
         assert "either cover_page_text or cover_page_file" in str(exc)
+
+
+def test_optimization_env_overrides(tmp_path, monkeypatch):
+    pdf_path, log_file = make_paths(tmp_path)
+    data = {
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+
+    monkeypatch.setenv("AUTO_OPTIMIZE_PDF_BEFORE_SEND", "true")
+    monkeypatch.setenv("TARGET_PDF_BYTES", "120000")
+    monkeypatch.setenv("GS_COMMAND", "gswin64c")
+
+    cfg = config_module.load_config(cfg_file)
+    assert cfg["auto_optimize_pdf_before_send"] is True
+    assert cfg["target_pdf_bytes"] == 120000
+    assert cfg["gs_command"] == "gswin64c"
+
+
+def test_invalid_target_pdf_bytes(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
+    data = {
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+        "target_pdf_bytes": 0,
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+
+    try:
+        config_module.load_config(cfg_file)
+        assert False
+    except ValueError as exc:
+        assert "target_pdf_bytes" in str(exc)

@@ -118,3 +118,49 @@ def test_main_returns_failure_exit_code(monkeypatch, tmp_path):
 
     rc = main_module.main([])
     assert rc == 1
+
+
+def test_main_runs_pdf_optimizer_when_enabled(monkeypatch, tmp_path):
+    cfg = make_base_cfg(tmp_path)
+    cfg["auto_optimize_pdf_before_send"] = True
+    cfg["target_pdf_bytes"] = 120000
+    cfg["gs_command"] = "gswin64c"
+
+    prepared = tmp_path / "prepared.pdf"
+    prepared.write_bytes(b"%PDF-1.4\n%prepared\n")
+    optimized = tmp_path / "optimized.pdf"
+    optimized.write_bytes(b"%PDF-1.4\n%optimized\n")
+
+    captured = {}
+
+    monkeypatch.setattr("src.main.config_module.load_config", lambda _: dict(cfg))
+    monkeypatch.setattr("src.main.prepare_fax_document", lambda p, c, f: (str(prepared), None))
+
+    def fake_optimize(path, target_bytes, gs_command):
+        captured["optimize_called"] = True
+        captured["path"] = path
+        captured["target_bytes"] = target_bytes
+        captured["gs_command"] = gs_command
+        return str(optimized), None, "optimized"
+
+    monkeypatch.setattr("src.main.optimize_pdf_for_send", fake_optimize)
+
+    class DummyApi:
+        def __init__(self, *args, **kwargs):
+            pass
+
+    monkeypatch.setattr("src.main.SinchFaxAPI", DummyApi)
+
+    def fake_run_retry_loop(api, run_cfg):
+        captured["pdf_path"] = run_cfg["pdf_path"]
+        return True
+
+    monkeypatch.setattr("src.main.run_retry_loop", fake_run_retry_loop)
+
+    rc = main_module.main([])
+    assert rc == 0
+    assert captured["optimize_called"] is True
+    assert captured["path"] == str(prepared)
+    assert captured["target_bytes"] == 120000
+    assert captured["gs_command"] == "gswin64c"
+    assert captured["pdf_path"] == str(optimized)

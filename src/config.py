@@ -18,6 +18,9 @@ _ENV_OVERRIDES = {
     "MAX_ATTEMPTS": "max_attempts",
     "DELAY_SECONDS": "delay_seconds",
     "LOG_FILE": "log_file",
+    "AUTO_OPTIMIZE_PDF_BEFORE_SEND": "auto_optimize_pdf_before_send",
+    "TARGET_PDF_BYTES": "target_pdf_bytes",
+    "GS_COMMAND": "gs_command",
 }
 
 
@@ -45,11 +48,16 @@ def load_config(path: Union[str, Path] = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
     for env_key, cfg_key in _ENV_OVERRIDES.items():
         if env_key in os.environ:
             val = os.environ[env_key]
-            if cfg_key in ("max_attempts", "delay_seconds"):
+            if cfg_key in ("max_attempts", "delay_seconds", "target_pdf_bytes"):
                 try:
-                    val = int(val) if cfg_key == "max_attempts" else float(val)
+                    if cfg_key in ("max_attempts", "target_pdf_bytes"):
+                        val = int(val)
+                    else:
+                        val = float(val)
                 except ValueError:
                     raise ValueError(f"{env_key} must be a number")
+            if cfg_key == "auto_optimize_pdf_before_send":
+                val = str(val).strip().lower() in {"1", "true", "yes", "on"}
             if cfg_key == "pdf_paths":
                 val = [part.strip() for part in str(val).split(",") if part.strip()]
             cfg[cfg_key] = val
@@ -94,6 +102,19 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     if "sinch_base_url" in cfg and cfg["sinch_base_url"] is not None:
         if not isinstance(cfg["sinch_base_url"], str) or not cfg["sinch_base_url"].strip():
             raise ValueError("sinch_base_url must be a non-empty string when provided")
+
+    if "auto_optimize_pdf_before_send" in cfg and not isinstance(
+        cfg["auto_optimize_pdf_before_send"], bool
+    ):
+        raise ValueError("auto_optimize_pdf_before_send must be a boolean")
+
+    if "target_pdf_bytes" in cfg:
+        if not isinstance(cfg["target_pdf_bytes"], int) or cfg["target_pdf_bytes"] < 1:
+            raise ValueError("target_pdf_bytes must be a positive integer")
+
+    if "gs_command" in cfg and cfg["gs_command"] is not None:
+        if not isinstance(cfg["gs_command"], str) or not cfg["gs_command"].strip():
+            raise ValueError("gs_command must be a non-empty string when provided")
 
     pdf_paths: list[str] = []
     if "pdf_paths" in cfg:

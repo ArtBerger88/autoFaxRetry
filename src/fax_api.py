@@ -116,6 +116,18 @@ class SinchFaxAPI:
 
         payload = self._safe_json(response)
         if payload is None:
+            if response.status_code in (401, 403):
+                return {
+                    "success": False,
+                    "fax_id": None,
+                    "message": (
+                        "Unauthorized by provider (HTTP "
+                        f"{response.status_code}). Verify sinch_project_id, "
+                        "sinch_key_id, and sinch_key_secret belong to the same project."
+                    ),
+                    "error_code": "http_error",
+                    "status_code": response.status_code,
+                }
             return {
                 "success": False,
                 "fax_id": None,

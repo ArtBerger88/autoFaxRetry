@@ -10,6 +10,7 @@ _ENV_OVERRIDES = {
     "SINCH_PROJECT_ID": "sinch_project_id",
     "SINCH_KEY_ID": "sinch_key_id",
     "SINCH_KEY_SECRET": "sinch_key_secret",
+    "SINCH_FROM_NUMBER": "sinch_from_number",
     "SINCH_BASE_URL": "sinch_base_url",
     "FAX_NUMBER": "fax_number",
     "PDF_PATH": "pdf_path",
@@ -111,6 +112,14 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     for key in ("sinch_project_id", "sinch_key_id", "sinch_key_secret"):
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
+
+    if "sinch_from_number" in cfg and cfg["sinch_from_number"] is not None:
+        if not isinstance(cfg["sinch_from_number"], str) or not cfg["sinch_from_number"].strip():
+            raise ValueError("sinch_from_number must be a non-empty string when provided")
+        if not str(cfg["sinch_from_number"]).strip().startswith("+"):
+            raise ValueError(
+                "sinch_from_number must be in E.164 format (for example +14155551234)"
+            )
 
     if "sinch_base_url" in cfg and cfg["sinch_base_url"] is not None:
         if not isinstance(cfg["sinch_base_url"], str) or not cfg["sinch_base_url"].strip():

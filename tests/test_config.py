@@ -52,9 +52,33 @@ def test_env_overrides(tmp_path, monkeypatch):
     cfg_file = make_temp_config(tmp_path, data)
     monkeypatch.setenv("FAX_NUMBER", "+999")
     monkeypatch.setenv("MAX_ATTEMPTS", "5")
+    monkeypatch.setenv("SINCH_FROM_NUMBER", "+13526967007")
     cfg = config_module.load_config(cfg_file)
     assert cfg["fax_number"] == "+999"
     assert cfg["max_attempts"] == 5
+    assert cfg["sinch_from_number"] == "+13526967007"
+
+
+def test_sinch_from_number_must_be_e164_when_provided(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
+    data = {
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "sinch_from_number": "3526967007",
+        "fax_number": "+123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+
+    try:
+        config_module.load_config(cfg_file)
+        assert False
+    except ValueError as exc:
+        assert "sinch_from_number" in str(exc)
 
 
 def test_missing_keys(tmp_path):

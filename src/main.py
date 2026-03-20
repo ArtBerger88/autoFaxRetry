@@ -148,6 +148,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         project_id=cfg["sinch_project_id"],
         key_id=cfg["sinch_key_id"],
         key_secret=cfg["sinch_key_secret"],
+        from_number=cfg.get("sinch_from_number"),
         base_url=cfg.get("sinch_base_url", "https://fax.api.sinch.com"),
     )
 

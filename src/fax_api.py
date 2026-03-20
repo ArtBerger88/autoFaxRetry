@@ -13,6 +13,7 @@ class SinchFaxAPI:
         project_id: str,
         key_id: str,
         key_secret: str,
+        from_number: Optional[str] = None,
         base_url: str = "https://fax.api.sinch.com",
         timeout: tuple[float, float] = (10.0, 30.0),
         network_retries: int = 2,
@@ -22,6 +23,7 @@ class SinchFaxAPI:
         self.project_id = project_id
         self.key_id = key_id
         self.key_secret = key_secret
+        self.from_number = from_number.strip() if isinstance(from_number, str) else None
         self.timeout = timeout
         self.network_retries = max(0, int(network_retries))
         self.network_retry_backoff = max(0.0, float(network_retry_backoff))
@@ -73,11 +75,15 @@ class SinchFaxAPI:
         for network_attempt in range(1, self.network_retries + 2):
             try:
                 with file_path.open("rb") as file_obj:
+                    payload_data: Dict[str, str] = {"to": to_number}
+                    if self.from_number:
+                        payload_data["from"] = self.from_number
+
                     response = requests.post(
                         url,
                         auth=(self.key_id, self.key_secret),
                         files={"file": (file_path.name, file_obj, "application/pdf")},
-                        data={"to": to_number},
+                        data=payload_data,
                         timeout=self.timeout,
                         headers={"Connection": "close"},
                     )

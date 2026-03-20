@@ -31,17 +31,29 @@ def send_fax_once(
         max_polls = max(1, int(math.ceil(poll_timeout / poll_interval)))
 
         for poll_index in range(max_polls): 
-            status = api.get_fax_status(fax_id) 
+            status_details = api.get_fax_status_details(fax_id)
+            status = str(status_details.get("status") or "failure")
+            status_code = status_details.get("status_code")
+            provider_status = status_details.get("provider_status")
+            error_reason = status_details.get("error_reason")
             
             if status == "success": 
                 return { 
-                    "success": True, "message": "Fax delivered successfully." 
+                    "success": True,
+                    "message": "Fax delivered successfully.",
+                    "fax_id": fax_id,
+                    "status_code": status_code,
+                    "provider_status": provider_status,
                 } 
             
             if status == "failure":
                 return {
                     "success": False,
                     "message": "Fax failed according to provider.",
+                    "fax_id": fax_id,
+                    "status_code": status_code,
+                    "provider_status": provider_status,
+                    "error_reason": error_reason,
                 }
             
             if poll_index < max_polls - 1:
@@ -49,7 +61,11 @@ def send_fax_once(
             
         return { 
             "success": False, 
-            "message": "Fax still in progress after timeout."
+            "message": "Fax still in progress after timeout.",
+            "fax_id": fax_id,
+            "status_code": status_code,
+            "provider_status": provider_status,
+            "error_reason": error_reason,
         }
     except Exception as e:
         return {"success": False, "message": f"Exception: {e}"}

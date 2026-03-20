@@ -145,3 +145,32 @@ def test_get_fax_status_in_progress_mapping(monkeypatch):
     api = SinchFaxAPI("project", "k", "s")
 
     assert api.get_fax_status("123") == "in_progress"
+
+
+def test_get_fax_status_details_on_request_exception(monkeypatch):
+    def fake_get(*args, **kwargs):
+        raise requests.ConnectionError("no route")
+
+    monkeypatch.setattr("src.fax_api.requests.get", fake_get)
+    api = SinchFaxAPI("project", "k", "s")
+
+    details = api.get_fax_status_details("123")
+    assert details["status"] == "failure"
+    assert details["status_code"] is None
+    assert "status_request_error" in details["error_reason"]
+
+
+def test_get_fax_status_details_provider_failure_reason(monkeypatch):
+    def fake_get(*args, **kwargs):
+        return FakeResponse(
+            status_code=200,
+            payload={"status": "FAILURE", "failureReason": "remote_no_answer"},
+        )
+
+    monkeypatch.setattr("src.fax_api.requests.get", fake_get)
+    api = SinchFaxAPI("project", "k", "s")
+
+    details = api.get_fax_status_details("123")
+    assert details["status"] == "failure"
+    assert details["provider_status"] == "FAILURE"
+    assert details["error_reason"] == "remote_no_answer"

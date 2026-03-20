@@ -171,8 +171,8 @@ class SinchFaxAPI:
             "status_code": response.status_code,
         }
 
-    def get_fax_status(self, fax_id: Any) -> str:
-        """Return one of: success, failure, in_progress."""
+    def get_fax_status_details(self, fax_id: Any) -> Dict[str, Any]:
+        """Return normalized fax status details for diagnostics and retry logic."""
         url = f"{self._project_base}/faxes/{fax_id}"
 
         try:
@@ -181,19 +181,67 @@ class SinchFaxAPI:
                 auth=(self.key_id, self.key_secret),
                 timeout=self.timeout,
             )
-        except requests.RequestException:
-            return "failure"
+        except requests.RequestException as exc:
+            return {
+                "status": "failure",
+                "status_code": None,
+                "provider_status": None,
+                "error_reason": f"status_request_error: {exc}",
+            }
 
         payload = self._safe_json(response)
-        if payload is None or not response.ok:
-            return "failure"
+        if payload is None:
+            return {
+                "status": "failure",
+                "status_code": response.status_code,
+                "provider_status": None,
+                "error_reason": "status_invalid_json",
+            }
+
+        if not response.ok:
+            return {
+                "status": "failure",
+                "status_code": response.status_code,
+                "provider_status": str(payload.get("status", "")).upper() or None,
+                "error_reason": str(
+                    payload.get("message")
+                    or payload.get("errorMessage")
+                    or "status_http_error"
+                ),
+            }
 
         status = str(payload.get("status", "")).upper()
         if status == "COMPLETED":
-            return "success"
+            return {
+                "status": "success",
+                "status_code": response.status_code,
+                "provider_status": status,
+                "error_reason": None,
+            }
         if status == "FAILURE":
-            return "failure"
-        return "in_progress"
+            return {
+                "status": "failure",
+                "status_code": response.status_code,
+                "provider_status": status,
+                "error_reason": str(
+                    payload.get("failureReason")
+                    or payload.get("message")
+                    or payload.get("errorMessage")
+                    or "provider_reported_failure"
+                ),
+            }
+
+        return {
+            "status": "in_progress",
+            "status_code": response.status_code,
+            "provider_status": status or None,
+            "error_reason": None,
+        }
+
+    def get_fax_status(self, fax_id: Any) -> str:
+        """Return one of: success, failure, in_progress."""
+        details = self.get_fax_status_details(fax_id)
+        return str(details.get("status") or "failure")
 
 
 # Backwards-compatible alias while callers migrate naming.

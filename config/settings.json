@@ -1,7 +1,7 @@
 { 
     "phaxio_api_key": "YOUR_API_KEY_HERE", 
     "phaxio_api_secret": "YOUR_API_SECRET_HERE", 
-    "fax_number": "4175204580", 
+    "fax_number": "5555555555", 
     "pdf_path": "data/sample.pdf", 
     "pdf_paths": ["data/sample.pdf"],
     "cover_page_text": "", 

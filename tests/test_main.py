@@ -68,6 +68,8 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
             "5",
             "--delay-seconds",
             "2.5",
+            "--status-poll-timeout-seconds",
+            "180",
             "--log-file",
             str(tmp_path / "custom" / "log.jsonl"),
             "--cover-page-file",
@@ -87,6 +89,7 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     assert captured["cover_page_file"] == str(cover_pdf)
     assert captured["cfg"]["max_attempts"] == 5
     assert captured["cfg"]["delay_seconds"] == 2.5
+    assert captured["cfg"]["status_poll_timeout_seconds"] == 180.0
     assert captured["cfg"]["log_file"].endswith("log.jsonl")
 
 
@@ -125,6 +128,7 @@ def test_main_runs_pdf_optimizer_when_enabled(monkeypatch, tmp_path):
     cfg["auto_optimize_pdf_before_send"] = True
     cfg["target_pdf_bytes"] = 120000
     cfg["gs_command"] = "gswin64c"
+    cfg["optimized_preview_pdf_path"] = str(tmp_path / "output" / "preview.pdf")
 
     prepared = tmp_path / "prepared.pdf"
     prepared.write_bytes(b"%PDF-1.4\n%prepared\n")
@@ -164,3 +168,4 @@ def test_main_runs_pdf_optimizer_when_enabled(monkeypatch, tmp_path):
     assert captured["target_bytes"] == 120000
     assert captured["gs_command"] == "gswin64c"
     assert captured["pdf_path"] == str(optimized)
+    assert Path(cfg["optimized_preview_pdf_path"]).exists()

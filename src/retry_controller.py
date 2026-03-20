@@ -23,6 +23,7 @@ def run_retry_loop(api, config):
     max_attempts = config["max_attempts"]
     delay = config["delay_seconds"]
     log_file = config["log_file"]
+    status_poll_timeout_seconds = float(config.get("status_poll_timeout_seconds", 60.0))
     run_id = str(uuid4())
 
     # record starting point
@@ -41,7 +42,12 @@ def run_retry_loop(api, config):
     )
 
     for attempt in range(1, max_attempts + 1):
-        result = send_fax_once(api, fax_number, pdf_path)
+        result = send_fax_once(
+            api,
+            fax_number,
+            pdf_path,
+            status_poll_timeout_seconds=status_poll_timeout_seconds,
+        )
 
         log_attempt(log_file, attempt, result, run_id=run_id)
 

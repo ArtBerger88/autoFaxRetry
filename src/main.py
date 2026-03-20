@@ -1,4 +1,5 @@
 import argparse
+import shutil
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -23,6 +24,13 @@ def _non_negative_float(value: str) -> float:
     parsed = float(value)
     if parsed < 0:
         raise argparse.ArgumentTypeError("must be >= 0")
+    return parsed
+
+
+def _positive_float(value: str) -> float:
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be > 0")
     return parsed
 
 
@@ -55,6 +63,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Override delay in seconds between attempts",
     )
     parser.add_argument("--log-file", help="Override log output path")
+    parser.add_argument(
+        "--status-poll-timeout-seconds",
+        type=_positive_float,
+        help="Override status polling timeout per send attempt",
+    )
+    parser.add_argument(
+        "--optimized-preview-pdf-path",
+        help="Persist a copy of the optimized PDF for manual review",
+    )
     return parser
 
 
@@ -75,6 +92,10 @@ def _apply_cli_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[
         merged["delay_seconds"] = args.delay_seconds
     if args.log_file is not None:
         merged["log_file"] = args.log_file
+    if args.status_poll_timeout_seconds is not None:
+        merged["status_poll_timeout_seconds"] = args.status_poll_timeout_seconds
+    if args.optimized_preview_pdf_path is not None:
+        merged["optimized_preview_pdf_path"] = args.optimized_preview_pdf_path
     config_module._validate_config(merged)
     return merged
 
@@ -105,6 +126,18 @@ def main(argv: Optional[list[str]] = None) -> int:
             prepared_pdf_path = optimized_path
             if optimize_temp_dir is not None:
                 temp_dirs.append(optimize_temp_dir)
+
+            preview_path = cfg.get("optimized_preview_pdf_path")
+            if preview_path:
+                preview_target = Path(preview_path)
+                preview_target.parent.mkdir(parents=True, exist_ok=True)
+                try:
+                    shutil.copy2(prepared_pdf_path, preview_target)
+                except OSError as exc:
+                    raise RuntimeError(
+                        f"Could not persist optimized preview PDF at '{preview_target}': {exc}"
+                    ) from exc
+                log(f"Saved optimized preview PDF to {preview_target}", cfg["log_file"])
 
         cfg["pdf_path"] = prepared_pdf_path
     except (FileNotFoundError, ValueError, RuntimeError) as exc:

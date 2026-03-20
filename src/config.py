@@ -18,7 +18,9 @@ _ENV_OVERRIDES = {
     "MAX_ATTEMPTS": "max_attempts",
     "DELAY_SECONDS": "delay_seconds",
     "LOG_FILE": "log_file",
+    "STATUS_POLL_TIMEOUT_SECONDS": "status_poll_timeout_seconds",
     "AUTO_OPTIMIZE_PDF_BEFORE_SEND": "auto_optimize_pdf_before_send",
+    "OPTIMIZED_PREVIEW_PDF_PATH": "optimized_preview_pdf_path",
     "TARGET_PDF_BYTES": "target_pdf_bytes",
     "GS_COMMAND": "gs_command",
 }
@@ -48,7 +50,12 @@ def load_config(path: Union[str, Path] = DEFAULT_CONFIG_PATH) -> Dict[str, Any]:
     for env_key, cfg_key in _ENV_OVERRIDES.items():
         if env_key in os.environ:
             val = os.environ[env_key]
-            if cfg_key in ("max_attempts", "delay_seconds", "target_pdf_bytes"):
+            if cfg_key in (
+                "max_attempts",
+                "delay_seconds",
+                "target_pdf_bytes",
+                "status_poll_timeout_seconds",
+            ):
                 try:
                     if cfg_key in ("max_attempts", "target_pdf_bytes"):
                         val = int(val)
@@ -87,6 +94,12 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     if not isinstance(cfg["delay_seconds"], (int, float)) or cfg["delay_seconds"] < 0:
         raise ValueError("delay_seconds must be a non-negative number")
 
+    if "status_poll_timeout_seconds" in cfg:
+        if not isinstance(cfg["status_poll_timeout_seconds"], (int, float)):
+            raise ValueError("status_poll_timeout_seconds must be a positive number")
+        if float(cfg["status_poll_timeout_seconds"]) <= 0:
+            raise ValueError("status_poll_timeout_seconds must be a positive number")
+
     for key in ("fax_number", "log_file"):
         if not isinstance(cfg[key], str) or not cfg[key].strip():
             raise ValueError(f"{key} must be a non-empty string")
@@ -115,6 +128,12 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     if "gs_command" in cfg and cfg["gs_command"] is not None:
         if not isinstance(cfg["gs_command"], str) or not cfg["gs_command"].strip():
             raise ValueError("gs_command must be a non-empty string when provided")
+
+    if "optimized_preview_pdf_path" in cfg and cfg["optimized_preview_pdf_path"] is not None:
+        if not isinstance(cfg["optimized_preview_pdf_path"], str) or not cfg[
+            "optimized_preview_pdf_path"
+        ].strip():
+            raise ValueError("optimized_preview_pdf_path must be a non-empty string when provided")
 
     pdf_paths: list[str] = []
     if "pdf_paths" in cfg:
@@ -167,3 +186,19 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
             pass
     except OSError as exc:
         raise ValueError(f"log_file is not writable: {cfg['log_file']} ({exc})") from exc
+
+    if cfg.get("optimized_preview_pdf_path"):
+        preview_path = Path(str(cfg["optimized_preview_pdf_path"]).strip())
+        preview_dir = preview_path.parent if preview_path.parent != Path("") else Path(".")
+        try:
+            preview_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise ValueError(f"Could not create optimized preview directory '{preview_dir}': {exc}") from exc
+
+        try:
+            with preview_path.open("ab"):
+                pass
+        except OSError as exc:
+            raise ValueError(
+                f"optimized_preview_pdf_path is not writable: {cfg['optimized_preview_pdf_path']} ({exc})"
+            ) from exc

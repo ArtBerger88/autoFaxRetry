@@ -1,6 +1,13 @@
+import math
 import time 
 
-def send_fax_once(api, fax_number, pdf_path): 
+def send_fax_once(
+    api,
+    fax_number,
+    pdf_path,
+    status_poll_timeout_seconds=60.0,
+    status_poll_interval_seconds=5.0,
+): 
     
     """ 
     Attempts to send a fax ONE TIME. This function: - Calls the API to submit the fax - Polls the fax status for ~60 seconds - Returns a dict describing success/failure 
@@ -19,9 +26,11 @@ def send_fax_once(api, fax_number, pdf_path):
             }
         fax_id = submit["fax_id"] 
         
-        # Poll for up to 60 seconds 
-        
-        for _ in range(12): 
+        poll_timeout = max(float(status_poll_timeout_seconds), 1.0)
+        poll_interval = max(float(status_poll_interval_seconds), 1.0)
+        max_polls = max(1, int(math.ceil(poll_timeout / poll_interval)))
+
+        for poll_index in range(max_polls): 
             status = api.get_fax_status(fax_id) 
             
             if status == "success": 
@@ -35,7 +44,8 @@ def send_fax_once(api, fax_number, pdf_path):
                     "message": "Fax failed according to provider.",
                 }
             
-            time.sleep(5) 
+            if poll_index < max_polls - 1:
+                time.sleep(poll_interval) 
             
         return { 
             "success": False, 

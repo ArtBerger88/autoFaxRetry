@@ -9,7 +9,7 @@ def test_run_retry_loop_logs_and_stops(tmp_path, monkeypatch, capsys):
     # monkeypatch send_fax_once used by retry_controller
     calls = []
 
-    def fake_send(api, fax, pdf):
+    def fake_send(api, fax, pdf, **kwargs):
         calls.append(1)
         if len(calls) < 2:
             return {"success": False, "message": "fail"}
@@ -36,7 +36,7 @@ def test_run_retry_loop_logs_and_stops(tmp_path, monkeypatch, capsys):
 def test_run_retry_loop_stops_on_auth_error(tmp_path, monkeypatch, capsys):
     calls = []
 
-    def fake_send(api, fax, pdf):
+    def fake_send(api, fax, pdf, **kwargs):
         calls.append(1)
         return {
             "success": False,

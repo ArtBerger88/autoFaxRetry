@@ -44,7 +44,7 @@ def test_send_fax_success(monkeypatch, tmp_path):
     assert result["status_code"] == 200
 
 
-def test_send_fax_includes_from_number_when_configured(monkeypatch, tmp_path):
+def test_send_fax_includes_from_number_and_image_resolution_when_configured(monkeypatch, tmp_path):
     pdf_path = make_pdf(tmp_path)
     captured = {}
 
@@ -56,11 +56,21 @@ def test_send_fax_includes_from_number_when_configured(monkeypatch, tmp_path):
         )
 
     monkeypatch.setattr("src.fax_api.requests.post", fake_post)
-    api = SinchFaxAPI("project", "k", "s", from_number="+13526967007")
+    api = SinchFaxAPI(
+        "project",
+        "k",
+        "s",
+        from_number="+13526967007",
+        image_resolution="normal",
+    )
 
     result = api.send_fax("+15551234567", str(pdf_path))
     assert result["success"] is True
-    assert captured["data"] == {"to": "+15551234567", "from": "+13526967007"}
+    assert captured["data"] == {
+        "to": "+15551234567",
+        "from": "+13526967007",
+        "imageResolution": "normal",
+    }
 
 
 def test_send_fax_missing_pdf(tmp_path):

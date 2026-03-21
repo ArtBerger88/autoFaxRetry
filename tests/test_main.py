@@ -11,6 +11,7 @@ def make_base_cfg(tmp_path):
         "sinch_key_id": "k",
         "sinch_key_secret": "s",
         "sinch_from_number": "+13526967007",
+        "sinch_image_resolution": "normal",
         "fax_number": "+1112223333",
         "pdf_path": str(pdf),
         "max_attempts": 3,
@@ -33,11 +34,20 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     monkeypatch.setattr("src.main.config_module.load_config", lambda _: dict(cfg))
 
     class FakeApi:
-        def __init__(self, project_id, key_id, key_secret, from_number, base_url):
+        def __init__(
+            self,
+            project_id,
+            key_id,
+            key_secret,
+            from_number,
+            image_resolution,
+            base_url,
+        ):
             captured["project_id"] = project_id
             captured["key_id"] = key_id
             captured["key_secret"] = key_secret
             captured["from_number"] = from_number
+            captured["image_resolution"] = image_resolution
             captured["base_url"] = base_url
 
     monkeypatch.setattr("src.main.SinchFaxAPI", FakeApi)
@@ -84,6 +94,7 @@ def test_main_applies_cli_overrides(monkeypatch, tmp_path):
     assert captured["key_id"] == "k"
     assert captured["key_secret"] == "s"
     assert captured["from_number"] == "+13526967007"
+    assert captured["image_resolution"] == "normal"
     assert captured["base_url"] == "https://fax.api.sinch.com"
     assert captured["cfg"]["fax_number"] == "+19998887777"
     assert captured["cfg"]["pdf_path"] == str(override_pdf_a)

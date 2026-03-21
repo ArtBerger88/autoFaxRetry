@@ -11,6 +11,7 @@ _ENV_OVERRIDES = {
     "SINCH_KEY_ID": "sinch_key_id",
     "SINCH_KEY_SECRET": "sinch_key_secret",
     "SINCH_FROM_NUMBER": "sinch_from_number",
+    "SINCH_IMAGE_RESOLUTION": "sinch_image_resolution",
     "SINCH_BASE_URL": "sinch_base_url",
     "FAX_NUMBER": "fax_number",
     "PDF_PATH": "pdf_path",
@@ -124,6 +125,16 @@ def _validate_config(cfg: Dict[str, Any]) -> None:
     if "sinch_base_url" in cfg and cfg["sinch_base_url"] is not None:
         if not isinstance(cfg["sinch_base_url"], str) or not cfg["sinch_base_url"].strip():
             raise ValueError("sinch_base_url must be a non-empty string when provided")
+
+    if "sinch_image_resolution" in cfg and cfg["sinch_image_resolution"] is not None:
+        if not isinstance(cfg["sinch_image_resolution"], str):
+            raise ValueError("sinch_image_resolution must be a string when provided")
+        normalized_resolution = str(cfg["sinch_image_resolution"]).strip().lower()
+        if normalized_resolution not in {"normal", "fine", "superfine"}:
+            raise ValueError(
+                "sinch_image_resolution must be one of: normal, fine, superfine"
+            )
+        cfg["sinch_image_resolution"] = normalized_resolution
 
     if "auto_optimize_pdf_before_send" in cfg and not isinstance(
         cfg["auto_optimize_pdf_before_send"], bool

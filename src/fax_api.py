@@ -14,6 +14,7 @@ class SinchFaxAPI:
         key_id: str,
         key_secret: str,
         from_number: Optional[str] = None,
+        image_resolution: Optional[str] = None,
         base_url: str = "https://fax.api.sinch.com",
         timeout: tuple[float, float] = (10.0, 30.0),
         network_retries: int = 2,
@@ -24,6 +25,9 @@ class SinchFaxAPI:
         self.key_id = key_id
         self.key_secret = key_secret
         self.from_number = from_number.strip() if isinstance(from_number, str) else None
+        self.image_resolution = (
+            image_resolution.strip().lower() if isinstance(image_resolution, str) else None
+        )
         self.timeout = timeout
         self.network_retries = max(0, int(network_retries))
         self.network_retry_backoff = max(0.0, float(network_retry_backoff))
@@ -78,6 +82,8 @@ class SinchFaxAPI:
                     payload_data: Dict[str, str] = {"to": to_number}
                     if self.from_number:
                         payload_data["from"] = self.from_number
+                    if self.image_resolution:
+                        payload_data["imageResolution"] = self.image_resolution
 
                     response = requests.post(
                         url,

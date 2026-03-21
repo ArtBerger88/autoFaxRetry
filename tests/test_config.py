@@ -221,6 +221,7 @@ def test_optimization_env_overrides(tmp_path, monkeypatch):
     monkeypatch.setenv("GS_COMMAND", "gswin64c")
     monkeypatch.setenv("STATUS_POLL_TIMEOUT_SECONDS", "180")
     monkeypatch.setenv("OPTIMIZED_PREVIEW_PDF_PATH", str(tmp_path / "preview" / "last.pdf"))
+    monkeypatch.setenv("SINCH_IMAGE_RESOLUTION", "normal")
 
     cfg = config_module.load_config(cfg_file)
     assert cfg["auto_optimize_pdf_before_send"] is True
@@ -228,6 +229,29 @@ def test_optimization_env_overrides(tmp_path, monkeypatch):
     assert cfg["gs_command"] == "gswin64c"
     assert cfg["status_poll_timeout_seconds"] == 180.0
     assert cfg["optimized_preview_pdf_path"].endswith("last.pdf")
+    assert cfg["sinch_image_resolution"] == "normal"
+
+
+def test_invalid_sinch_image_resolution(tmp_path):
+    pdf_path, log_file = make_paths(tmp_path)
+    data = {
+        "sinch_project_id": "proj-123",
+        "sinch_key_id": "k",
+        "sinch_key_secret": "s",
+        "fax_number": "+123",
+        "pdf_path": pdf_path,
+        "max_attempts": 3,
+        "delay_seconds": 1,
+        "log_file": log_file,
+        "sinch_image_resolution": "ultra",
+    }
+    cfg_file = make_temp_config(tmp_path, data)
+
+    try:
+        config_module.load_config(cfg_file)
+        assert False
+    except ValueError as exc:
+        assert "sinch_image_resolution" in str(exc)
 
 
 def test_invalid_target_pdf_bytes(tmp_path):

@@ -44,3 +44,10 @@
 
 ## Phase 8: Release
 - [✅] Release
+
+## Phase 9: Post-release hardening
+- [✅] Add optional pre-send PDF optimization with Ghostscript and persisted preview output
+- [✅] Add provider request controls for `sinch_from_number` and `sinch_image_resolution`
+- [✅] Default operations tuning to `normal` image resolution for better handshake compatibility
+- [✅] Add richer diagnostics (`run_id`, provider status details, auth fingerprints)
+- [✅] Expand operations and architecture docs to reflect production behavior and troubleshooting signals

@@ -1,7 +1,7 @@
-# Release Prep (v1.0.0)
+# Release Prep and Post-Release Notes
 
 ## Scope
-This document defines the final checks and exact command sequence for releasing v1.0.0.
+This document defines final release checks and post-release documentation upkeep tasks.
 
 ## Preconditions
 - Working tree is clean or only includes intended release changes.
@@ -22,15 +22,15 @@ Run from repository root.
 ```powershell
 git status
 git add README.md CHANGELOG.md docs/operations_runbook.md docs/release_prep.md docs/roadmap.md src tests
-git commit -m "release: prepare v1.0.0"
-git tag -a v1.0.0 -m "Auto-Fax-Retry v1.0.0"
-git show v1.0.0
+git commit -m "release: prepare <version>"
+git tag -a <version> -m "Auto-Fax-Retry <version>"
+git show <version>
 ```
 
 ## Publish procedure
 ```powershell
 git push origin <branch-name>
-git push origin v1.0.0
+git push origin <version>
 ```
 
 ## Suggested release notes
@@ -38,3 +38,9 @@ git push origin v1.0.0
 - Structured rotating logs for operational visibility.
 - CLI overrides and deterministic exit codes for scheduler integration.
 - Expanded unit test coverage across API wrapper and CLI paths.
+
+## Post-release documentation checklist
+- Update `CHANGELOG.md` with new runtime controls and diagnostics.
+- Update `docs/operations_runbook.md` with current tuning recommendations.
+- Update `docs/architecture.md` to reflect module/data-flow changes.
+- Update `docs/roadmap.md` with completed post-release hardening items.

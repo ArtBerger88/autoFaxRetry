@@ -10,6 +10,9 @@ Lightweight Python service that sends a PDF to a fax number and retries failed a
 - CLI overrides for one-off runs and scheduler integration.
 - Single fax payload from multiple source PDFs (merged before send).
 - Optional generated text cover page prepended before merged documents.
+- Optional PDF optimization (Ghostscript) before send, with persisted preview copy.
+- Optional `sinch_from_number` and `sinch_image_resolution` controls passed to provider API.
+- Expanded diagnostics in logs (`run_id`, status metadata, provider failure reason, auth fingerprints).
 
 ## Quick start
 ```powershell
@@ -23,8 +26,13 @@ Configure `config/settings.json` with valid values, especially:
 - `sinch_key_id`
 - `sinch_key_secret`
 - `fax_number`
-- `pdf_path`
+- `pdf_paths` (or `pdf_path` for single-document mode)
 - `log_file`
+
+Recommended operational settings:
+- Set `sinch_image_resolution` to `normal` for better destination compatibility and faster handshake outcomes on unstable fax routes.
+- Set `sinch_from_number` when the provider account expects a specific source DID.
+- Enable `auto_optimize_pdf_before_send` to reduce payload size and lower send friction on long/fragile routes.
 
 Run:
 ```powershell
@@ -50,10 +58,13 @@ Supported arguments:
 - `--max-attempts`
 - `--delay-seconds`
 - `--log-file`
+- `--status-poll-timeout-seconds`
+- `--optimized-preview-pdf-path`
 
 Dependency note:
 - Multi-document merge requires `pypdf`.
 - Generated text cover page requires `reportlab`.
+- PDF optimization requires Ghostscript (`gswin64c`/`gswin32c`/`gs`).
 - `--cover-page-text` and `--cover-page-file` are mutually exclusive.
 
 Exit codes:

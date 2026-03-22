@@ -10,7 +10,7 @@ This document defines final release checks and post-release documentation upkeep
 
 ## Verification checklist
 - Run tests:
-  - `c:/Users/artyz/ProjectFile/Auto-fax-retry/autoFaxRetry/.venv/Scripts/python.exe -m pytest -q`
+  - `python -m pytest -q`
 - Confirm expected exit codes:
   - `python -m src.main --config config/settings.json`
 - Confirm logging output is JSON and rotation files appear after size growth.

@@ -63,11 +63,12 @@ python -m src.main --config config/settings.json --optimized-preview-pdf-path da
 ## Windows Task Scheduler setup
 Use a task action similar to:
 ```text
-Program/script: C:\Users\artyz\ProjectFile\Auto-fax-retry\autoFaxRetry\.venv\Scripts\python.exe
+Program/script: <path-to-project>\.venv\Scripts\python.exe
 Add arguments: -m src.main --config config/settings.json
-Start in: C:\Users\artyz\ProjectFile\Auto-fax-retry\autoFaxRetry
+Start in: <path-to-project>
 ```
 
+Replace `<path-to-project>` with your actual project root directory.
 Set environment variables at the machine/user level so scheduled runs can access secrets.
 
 ## Troubleshooting
